@@ -12,6 +12,9 @@
 //dynamic controlable viewport
 #include "DynamicCam.h"
 
+//fps timeline
+#include <deque>
+
 //helper class for storing singel cell data in one unordered_set
 //structs instead of classes for defaulting to public
 struct Coord
@@ -159,12 +162,44 @@ void drawCells(Viewport viewport, Grid& grid, float cellSize)
     }
 }
 
-int main() {
+//helper struct to track fps history samples
+struct FpsSample
+{
+    int fps;
+    float time;
+};
+
+//helper struct to track live cell count history
+struct CellCountSample
+{
+    int cellCount;
+    float time;
+};
+
+int main() 
+{
     //screen initialisation
     const int WIDTH = 1000;
     const int HEIGHT = 800;
     InitWindow(WIDTH, HEIGHT, "Infinite Conway's Game of Life");
-    SetTargetFPS(60);
+
+    int targetFps = 60;
+    bool limitFps = true;
+    SetTargetFPS(targetFps);
+
+    //tiny fps timeline
+    std::deque<FpsSample> fpsHistory;
+    int timelineWidth = 100;
+    int timelineHeight = 80;
+    int historyLength = 3;  //in seconds
+    Vector2 timelinePos = Vector2(10, 10);
+
+    //tiny cell count timeline
+    std::deque<CellCountSample> cellCountHistory;
+    int cellTimelineWidth = 100;
+    int cellTimelineHeight = 80;
+    int cellHistoryLength = 3;  //in seconds
+    Vector2 cellTimelinePos = Vector2(10, 115);
 
     //variable initialisation
     Viewport viewport = Viewport(Vector2(0, 0), 10, 0.05f, 0.05f, 5);
@@ -178,18 +213,32 @@ int main() {
     viewport.zoom = 0.35f;
 
     //controls text
+    bool displayInterface = true;
     std::vector<std::string> controlText = {
-        "Click to draw/erase",
-        "Scroll to zoom",
-        "WASD to move",
-        "Press P to pause"
+        "Left Click - draw/erase",
+        "Scroll - zoom",
+        "WASD - move",
+        "P - pause",
+        "L - toggle FPS limit",
+        "T - toggle interface"
     };
 
     //while loop
     while (!WindowShouldClose())
     {
+        //check fps limit toggle
+        if (IsKeyPressed(KEY_L)) 
+        {
+            limitFps = !limitFps;
+
+            if (limitFps) 
+            {SetTargetFPS(targetFps);}
+            else 
+            {SetTargetFPS(0);}
+        }
+
         //update
-        viewport.move();
+        viewport.move(GetFrameTime());
         viewport.zoomCamera();
 
         //check for pausing
@@ -220,21 +269,125 @@ int main() {
             DrawRectangleV({screenPos.x - screenSize.x / 2.0f, screenPos.y - screenSize.y / 2.0f}, screenSize, Color(255, 255, 255, 255));
         }
 
-        //text drawing
-        DrawText(TextFormat("%i", GetFPS()), 10, 14, 20, Color{0, 0, 0, 100});
-        DrawText(TextFormat("%i", GetFPS()), 10, 11, 20, Color{0, 150, 0, 255});
-        DrawText(TextFormat("%i", GetFPS()), 10, 10, 20, Color{0, 255, 0, 255});
+        //update fps history
+        int currFps = GetFPS();
+        float currTime = GetTime();
+        fpsHistory.push_back({currFps, currTime});
+        //remnove outdated samples
+        while (!fpsHistory.empty() && currTime - fpsHistory.front().time > historyLength)
+        {fpsHistory.pop_front();}
 
-        //draw control text
-        for (int i = 0; i < controlText.size(); i++)
+        //update cell count history
+        int currCellCount = grid.liveCells.size();
+        cellCountHistory.push_back({currCellCount, currTime});
+        //remnove outdated samples
+        while (!cellCountHistory.empty() && currTime - cellCountHistory.front().time > cellHistoryLength)
+        {cellCountHistory.pop_front();}
+
+        //text drawing + interface toggle
+        if (IsKeyPressed(KEY_T)) {displayInterface = !displayInterface;}
+        if (displayInterface)
         {
-            DrawText(controlText[i].c_str(), 10, HEIGHT - (i+1) * 15 + 3 - 10, 10, Color{0, 0, 0, 100});
-            DrawText(controlText[i].c_str(), 10, HEIGHT - (i+1) * 15 + 1 - 10, 10, Color{0, 150, 0, 255});
-            DrawText(controlText[i].c_str(), 10, HEIGHT - (i+1) * 15 + 0 - 10, 10, Color{0, 255, 0, 255});
+            //draw control text
+            for (int i = 0; i < controlText.size(); i++)
+            {
+                DrawText(controlText[i].c_str(), 10, HEIGHT - (i+1) * 15 + 3 - 10, 10, Color{0, 0, 0, 100});
+                DrawText(controlText[i].c_str(), 10, HEIGHT - (i+1) * 15 + 1 - 10, 10, Color{150, 150, 150, 255});
+                DrawText(controlText[i].c_str(), 10, HEIGHT - (i+1) * 15 + 0 - 10, 10, Color{255, 255, 255, 255});
+            }
+
+            //draw fps history timeline
+            DrawRectangle(timelinePos.x, timelinePos.y, timelineWidth, timelineHeight, Color{0, 0, 0, 50});
+            if (!fpsHistory.empty())
+            {
+                //get maximum for height tacking
+                int localMaximum = fpsHistory[0].fps;
+                for (const FpsSample& sample : fpsHistory)
+                {
+                    if (sample.fps > localMaximum)
+                    {localMaximum = sample.fps;}
+                }
+
+                //do some math for correct graph representation;
+                float heightPerSingleFps = (float)timelineHeight / (float)localMaximum;
+                float oldestTime = currTime - historyLength;
+
+                for (size_t i = 0; i < fpsHistory.size() - 1; i++)
+                {
+                    FpsSample sample1 = fpsHistory[i];
+                    FpsSample sample2 = fpsHistory[i + 1];
+
+                    //convert time to  position
+                    float x1 = ((sample1.time - oldestTime) / historyLength) * timelineWidth;
+                    float x2 =((sample2.time - oldestTime) / historyLength) * timelineWidth;
+
+                    //convert fps to height
+                    float y1 = timelineHeight - heightPerSingleFps * sample1.fps;
+                    float y2 = timelineHeight - heightPerSingleFps * sample2.fps;
+
+                    DrawLine(
+                        timelinePos.x + x1,
+                        timelinePos.y + y1,
+                        timelinePos.x + x2,
+                        timelinePos.y + y2,
+                        Color{0, 255, 0, 255}
+                    );
+                }
+            }
+
+            //draw fps aftere timeline
+            DrawText(TextFormat("FPS: %i", currFps), 10, 95 + 3, 10, Color{0, 0, 0, 100});
+            DrawText(TextFormat("FPS: %i", currFps), 10, 95 + 1, 10, Color{0, 150, 0, 255});
+            DrawText(TextFormat("FPS: %i", currFps), 10, 95 + 0, 10, Color{0, 255, 0, 255});
+
+            //draw cell count history timeline
+            DrawRectangle(cellTimelinePos.x, cellTimelinePos.y, cellTimelineWidth, cellTimelineHeight, Color{0, 0, 0, 50});
+            if (!cellCountHistory.empty())
+            {
+                //get maximum for height tacking
+                int localMaximum = cellCountHistory[0].cellCount;
+                for (const CellCountSample& sample : cellCountHistory)
+                {
+                    if (sample.cellCount > localMaximum)
+                    {localMaximum = sample.cellCount;}
+                }
+
+                //do some math for correct graph representation;
+                float heightPerSingleCount = (float)cellTimelineHeight / (float)localMaximum;
+                float oldestTime = currTime - cellHistoryLength;
+
+                for (size_t i = 0; i < cellCountHistory.size() - 1; i++)
+                {
+                    CellCountSample sample1 = cellCountHistory[i];
+                    CellCountSample sample2 = cellCountHistory[i + 1];
+
+                    //convert time to  position
+                    float x1 = ((sample1.time - oldestTime) / cellHistoryLength) * cellTimelineWidth;
+                    float x2 =((sample2.time - oldestTime) / cellHistoryLength) * cellTimelineWidth;
+
+                    //convert cellcount to height
+                    float y1 = cellTimelineHeight - heightPerSingleCount * sample1.cellCount;
+                    float y2 = cellTimelineHeight - heightPerSingleCount * sample2.cellCount;
+
+                    DrawLine(
+                        cellTimelinePos.x + x1,
+                        cellTimelinePos.y + y1,
+                        cellTimelinePos.x + x2,
+                        cellTimelinePos.y + y2,
+                        Color{255, 255, 0, 255}
+                    );
+                }
+            }
+
+            //draw active cell count after timeline
+            DrawText(TextFormat("Live cells: %i", currCellCount), 10, 200 + 3, 10, Color{0, 0, 0, 100});
+            DrawText(TextFormat("Live cells: %i", currCellCount), 10, 200 + 1, 10, Color{150, 150, 0, 255});
+            DrawText(TextFormat("Live cells: %i", currCellCount), 10, 200 + 0, 10, Color{255, 255, 0, 255});
         }
 
         EndDrawing();
     }
+
     CloseWindow();
     return 0;
 }

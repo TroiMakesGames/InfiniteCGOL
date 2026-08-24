@@ -31,7 +31,7 @@ class Viewport
         this->maxZoom = maxZoom;
     }
 
-    void move() 
+    void move(float deltaTime) 
     {
         //get key inputs and move camera world pos
         Vector2 direction = Vector2 (0, 0);
@@ -50,7 +50,7 @@ class Viewport
         if (keyPressed)
         {
             direction = Vector2Normalize(direction);
-            worldPos = Vector2Add(worldPos, Vector2Scale(direction, currMovementSpeed));
+            worldPos = Vector2Add(worldPos, Vector2Scale(direction, currMovementSpeed * deltaTime * 60));
         }
     }
 
