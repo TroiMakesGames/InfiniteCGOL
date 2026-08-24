@@ -1,0 +1,17 @@
+// Build documentation for C++ Raylib implementations (how to compile builds and this type of stuff)
+
+In order to compile a target .cpp file the correct environment terminal and command links must be used
+
+---------- SINGLE FILE COMPILE TO .EXE ----------
+
+1. Open MSYS2 MINGW64    (a terminal/app that should be found in windows app search)
+
+2. move to the working directory of the target .cpp file
+	2.1 writing "cd " and then drag-and-dropping the file from the file explorer will automaticaly fill in the path to the file from root C:\\
+	2.2 if not using the 2.1 trick in order to move from the starting msys2 mingw64 directory you can also do "cd C://" to move to root C:\\
+
+3. run this command (replace <name> with the name of the target .cpp file and the desired output .exe name)  "g++ <name>.cpp -o <name>.exe -lraylib -lopengl32 -lgdi32 -lwinmm"
+
+a <name>.exe file will be generated in the same folder as the target <name>.cpp file is located 
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
