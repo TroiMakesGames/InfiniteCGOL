@@ -199,7 +199,7 @@ int main()
     int cellTimelineWidth = 100;
     int cellTimelineHeight = 80;
     int cellHistoryLength = 3;  //in seconds
-    Vector2 cellTimelinePos = Vector2(10, 115);
+    Vector2 cellTimelinePos = Vector2(115, 10);
 
     //variable initialisation
     Viewport viewport = Viewport(Vector2(0, 0), 10, 0.05f, 0.05f, 5);
@@ -336,9 +336,9 @@ int main()
             }
 
             //draw fps aftere timeline
-            DrawText(TextFormat("FPS: %i", currFps), 10, 95 + 3, 10, Color{0, 0, 0, 100});
-            DrawText(TextFormat("FPS: %i", currFps), 10, 95 + 1, 10, Color{0, 150, 0, 255});
-            DrawText(TextFormat("FPS: %i", currFps), 10, 95 + 0, 10, Color{0, 255, 0, 255});
+            DrawText(TextFormat("FPS: %i", currFps), timelinePos.x + 5, timelinePos.y + timelineHeight - 15 + 4, 10, Color{0, 0, 0, 100});
+            DrawText(TextFormat("FPS: %i", currFps), timelinePos.x + 5, timelinePos.y + timelineHeight - 15 + 1, 10, Color{0, 150, 0, 255});
+            DrawText(TextFormat("FPS: %i", currFps), timelinePos.x + 5, timelinePos.y + timelineHeight - 15 + 0, 10, Color{0, 255, 0, 255});
 
             //draw cell count history timeline
             DrawRectangle(cellTimelinePos.x, cellTimelinePos.y, cellTimelineWidth, cellTimelineHeight, Color{0, 0, 0, 50});
@@ -380,9 +380,24 @@ int main()
             }
 
             //draw active cell count after timeline
-            DrawText(TextFormat("Live cells: %i", currCellCount), 10, 200 + 3, 10, Color{0, 0, 0, 100});
-            DrawText(TextFormat("Live cells: %i", currCellCount), 10, 200 + 1, 10, Color{150, 150, 0, 255});
-            DrawText(TextFormat("Live cells: %i", currCellCount), 10, 200 + 0, 10, Color{255, 255, 0, 255});
+            DrawText(TextFormat("Live cells: %i", currCellCount), cellTimelinePos.x + 5, cellTimelinePos.y + cellTimelineHeight - 15 + 4, 10, Color{0, 0, 0, 100});
+            DrawText(TextFormat("Live cells: %i", currCellCount), cellTimelinePos.x + 5, cellTimelinePos.y + cellTimelineHeight - 15 + 1, 10, Color{150, 150, 0, 255});
+            DrawText(TextFormat("Live cells: %i", currCellCount), cellTimelinePos.x + 5, cellTimelinePos.y + cellTimelineHeight - 15 + 0, 10, Color{255, 255, 0, 255});
+
+            //draw viewport position and mouse potiion
+            int viewpportX = (int)std::round(viewport.worldPos.x);
+            int viewpportY = (int)std::round(viewport.worldPos.y);
+            DrawText(TextFormat("Camera position: %d, %d", viewpportX, viewpportY), 10, 95, 10, Color{0, 0, 0, 100});
+            DrawText(TextFormat("Camera position: %d, %d", viewpportX, viewpportY), 10, 95, 10, Color{150, 0, 0, 255});
+            DrawText(TextFormat("Camera position: %d, %d", viewpportX, viewpportY), 10, 95, 10, Color{255, 0, 0, 255});
+
+            Vector2 mouseWorldPos = viewport.screenToWorldPos(GetMousePosition());
+            Coord mouseCell = {static_cast<int>(floor((mouseWorldPos.x + cellSize/2) / cellSize)), static_cast<int>(floor((mouseWorldPos.y + cellSize/2) / cellSize))};
+            int mX = mouseCell.x;
+            int mY = mouseCell.y;
+            DrawText(TextFormat("Mouse position: %d, %d", mX, mY), 10, 105, 10, Color{0, 0, 0, 100});
+            DrawText(TextFormat("Mouse position: %d, %d", mX, mY), 10, 105, 10, Color{0, 75, 150, 255});
+            DrawText(TextFormat("Mouse position: %d, %d", mX, mY), 10, 105, 10, Color{0, 127, 255, 255});
         }
 
         EndDrawing();
