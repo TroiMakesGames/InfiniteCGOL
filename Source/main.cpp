@@ -9,8 +9,10 @@
 #include <unordered_set>
 #include <unordered_map>
 
-//dynamic controlable viewport
+//include personal external tools
 #include "DynamicCam.h"
+#include "InputField.h"
+#include "Button.h"
 
 //fps timeline
 #include <deque>
@@ -212,6 +214,13 @@ int main()
     //adjust viewport zoom so that on start it doesnt draw cells too large
     viewport.zoom = 0.35f;
 
+    //save file UI
+    //colors: backColor borderColor selectedBackColor selectedBorderColor textColor fillerTextColor selectedFillerTextColor
+    InputField sv_inputField = InputField(200, 40, 2, "SaveFile.txt", 15, Color{0, 0, 0, 100}, Color(255, 255, 255, 255), Color{0, 0, 0, 200}, Color{255, 255, 255, 255}, Color{255, 255, 255, 255}, Color{200, 200, 200, 255}, Color{255, 255, 255, 255});
+    Button sv_saveButton = Button(97, 40, 2, "Save to", 15, Color{0, 0, 0, 100}, Color(0, 255, 0, 255), Color{0, 0, 0, 50}, Color{0, 150, 0, 255}, Color{0, 255, 0, 255}, Color{0, 150, 0, 255});
+    Button sv_loadButton = Button(97, 40, 2, "Load from", 15, Color{0, 0, 0, 100}, Color(255, 0, 0, 255), Color{0, 0, 0, 50}, Color{150, 0, 0, 255}, Color{255, 0, 0, 255}, Color{150, 0, 0, 255});
+    Button sv_copyButton = Button(200, 40, 2, "Copy from", 15, Color{0, 0, 0, 100}, Color(0, 100, 255, 255), Color{0, 0, 0, 50}, Color{0, 50, 150, 255}, Color{0, 100, 255, 255}, Color{0, 50, 150, 255});
+
     //controls text
     bool displayInterface = true;
     std::vector<std::string> controlText = {
@@ -226,28 +235,40 @@ int main()
     //while loop
     while (!WindowShouldClose())
     {
-        //check fps limit toggle
-        if (IsKeyPressed(KEY_L)) 
-        {
-            limitFps = !limitFps;
+        //check if input field in vefore obeying key toggles
+        bool isInInputField = sv_inputField.IsSelected();
 
-            if (limitFps) 
-            {SetTargetFPS(targetFps);}
-            else 
-            {SetTargetFPS(0);}
+        //check fps limit toggle
+        if (!isInInputField)
+        {
+            if (IsKeyPressed(KEY_L)) 
+            {
+                limitFps = !limitFps;
+
+                if (limitFps) 
+                {SetTargetFPS(targetFps);}
+                else 
+                {SetTargetFPS(0);}
+            }
         }
 
         //update
-        viewport.move(GetFrameTime());
+        if (!isInInputField)
+        {viewport.move(GetFrameTime());}
         viewport.zoomCamera();
 
         //check for pausing
-        if (IsKeyPressed(KEY_P)) {isPaused = !isPaused;}
+        if (!isInInputField)
+        {if (IsKeyPressed(KEY_P)) {isPaused = !isPaused;}}
+
         if (!isPaused)
         {grid.updateGrid();}
 
         //get user drawing
-        drawCells(viewport, grid, cellSize);
+        //dont draw over UI elements
+        Vector2 mousePos = GetMousePosition();
+        if (mousePos.x < WIDTH - 200 - 5 - 5 || mousePos.y > 140)
+        {drawCells(viewport, grid, cellSize);}
 
         // draw
         BeginDrawing();
@@ -285,7 +306,11 @@ int main()
         {cellCountHistory.pop_front();}
 
         //text drawing + interface toggle
-        if (IsKeyPressed(KEY_T)) {displayInterface = !displayInterface;}
+        if (!isInInputField)
+        {
+            if (IsKeyPressed(KEY_T)) 
+            {displayInterface = !displayInterface;}
+        }
         if (displayInterface)
         {
             //draw control text
@@ -398,6 +423,15 @@ int main()
             DrawText(TextFormat("Mouse position: %d, %d", mX, mY), 10, 105, 10, Color{0, 0, 0, 100});
             DrawText(TextFormat("Mouse position: %d, %d", mX, mY), 10, 105, 10, Color{0, 75, 150, 255});
             DrawText(TextFormat("Mouse position: %d, %d", mX, mY), 10, 105, 10, Color{0, 127, 255, 255});
+        }
+
+        //draw UI elements
+        if (displayInterface)
+        {
+            sv_inputField.Draw(WIDTH - 200 - 5, 5);
+            sv_saveButton.Draw(WIDTH - 200 - 5, 5 + 40 + 5);
+            sv_loadButton.Draw(WIDTH - 200 - 5 + 103, 5 + 40 + 5);
+            sv_copyButton.Draw(WIDTH - 200 - 5, 5 + 40 + 5 + 40 + 5);
         }
 
         EndDrawing();
