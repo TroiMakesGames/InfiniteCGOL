@@ -1,0 +1,16 @@
+cpos 0 0
+czum 1.6
+lvcl -2 -1
+lvcl 0 0
+lvcl -2 0
+lvcl -1 -1
+lvcl 0 1
+lvcl -1 1
+lvcl 1 2
+lvcl 3 3
+lvcl 2 2
+lvcl 1 3
+lvcl 4 6
+lvcl 3 5
+lvcl 5 6
+lvcl 5 5

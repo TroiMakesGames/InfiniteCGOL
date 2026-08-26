@@ -1,0 +1,22 @@
+cpos 36.6198 0
+czum 2.2
+lvcl 5 5
+lvcl 6 5
+lvcl 4 4
+lvcl 6 1
+lvcl 6 -3
+lvcl 4 -2
+lvcl 5 -2
+lvcl 3 -3
+lvcl 4 2
+lvcl 0 0
+lvcl 5 2
+lvcl -1 -1
+lvcl 5 -3
+lvcl 1 -1
+lvcl 1 -2
+lvcl 0 -3
+lvcl 3 3
+lvcl -1 -3
+lvcl 6 2
+lvcl -2 -2
