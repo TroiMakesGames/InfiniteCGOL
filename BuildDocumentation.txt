@@ -10,7 +10,8 @@ In order to compile a target .cpp file the correct environment terminal and comm
 	2.1 writing "cd " and then drag-and-dropping the file from the file explorer will automaticaly fill in the path to the file from root C:\\
 	2.2 if not using the 2.1 trick in order to move from the starting msys2 mingw64 directory you can also do "cd C://" to move to root C:\\
 
-3. run this command (replace <name> with the name of the target .cpp file and the desired output .exe name)  "g++ <name>.cpp -o <name>.exe -lraylib -lopengl32 -lgdi32 -lwinmm"
+3. run this command (replace <name> with the name of the target .cpp file and the desired output .exe name)  "g++ <name>.cpp -o <name>.exe -lraylib -lopengl32 -lgdi32 -lwinmm -static-libgcc -static-libstdc++
+"
 
 a <name>.exe file will be generated in the same folder as the target <name>.cpp file is located 
 
