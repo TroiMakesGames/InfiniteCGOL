@@ -17,6 +17,12 @@
 //fps timeline
 #include <deque>
 
+//saving system
+#include <filesystem>
+#include <fstream>
+#include <limits>
+//#include iostream (already included)
+
 //helper class for storing singel cell data in one unordered_set
 //structs instead of classes for defaulting to public
 struct Coord
@@ -164,6 +170,86 @@ void drawCells(Viewport viewport, Grid& grid, float cellSize)
     }
 }
 
+/* saving system funcs */
+
+//check whether the input field contents are a valid filename
+bool IsValidFilename(const std::string& filename)
+{return !filename.empty() && filename.find_first_of("<>:\"/\\|?*") == std::string::npos;}
+
+//save world data to the entered save file
+bool SaveWorld(const std::string& filename, const Viewport& viewport, const Grid& grid)
+{
+    //open file
+    std::ofstream file(filename);
+    if (!file.is_open())
+    {std::cout << "Failed to open file!\n"; return false;}
+
+    //save camera pos and zoom
+    file << "cpos " << viewport.worldPos.x << " " << viewport.worldPos.y << "\n";
+    file.flush();
+    file << "czum " << viewport.zoom << "\n";
+    file.flush();
+
+    //save live cells
+    int count = 0;
+    for (const Coord& cell : grid.liveCells)
+    {
+        file << "lvcl " << cell.x << " " << cell.y << "\n";
+        count++;
+
+        if (count % 100 == 0) 
+        {file.flush();}
+    }
+
+    file.close();
+    return true;    //coomunicate successfull save
+}
+
+//load world data from the entered save file
+bool LoadWorld(const std::string& filename, Viewport& viewport, Grid& grid)
+{
+        std::cout << "Loading from: "
+          << std::filesystem::absolute(filename)
+          << "\n";
+
+    //open file
+    std::ifstream file(filename);
+    if (!file.is_open())
+    {std::cout << "Failed to open save file!\n"; return false;}
+
+    //clear current world
+    grid.liveCells.clear();
+
+    //go through each line of data and procces depending on the type
+    std::string type;
+    while (file >> type)
+    {
+        if (type == "cpos")
+        {file >> viewport.worldPos.x >> viewport.worldPos.y;}
+
+        else if (type == "czum")
+        {file >> viewport.zoom;}
+
+        else if (type == "lvcl")
+        {
+            Coord cell;
+            file >> cell.x >> cell.y;
+            grid.liveCells.insert(cell);
+        }
+        else
+        {
+            //skip the rest of the line
+            std::cout << "Unknown save data: " << type << "\n";
+            file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        }
+    }
+
+    file.close();
+    return true;    //coomunicate successfull load
+}
+
+/* benchmark history structs */
+
 //helper struct to track fps history samples
 struct FpsSample
 {
@@ -180,6 +266,8 @@ struct CellCountSample
 
 int main() 
 {
+    std::cout << "Working directory: " << std::filesystem::current_path() << "\n";
+
     //screen initialisation
     const int WIDTH = 1000;
     const int HEIGHT = 800;
@@ -432,6 +520,25 @@ int main()
             sv_saveButton.Draw(WIDTH - 200 - 5, 5 + 40 + 5);
             sv_loadButton.Draw(WIDTH - 200 - 5 + 103, 5 + 40 + 5);
             sv_copyButton.Draw(WIDTH - 200 - 5, 5 + 40 + 5 + 40 + 5);
+        }
+
+        //get save system inputs
+        //save data
+        if (sv_saveButton.IsPressedFirstFrame())
+        {
+            //get input field save file name and check validity
+            std::string filename = sv_inputField.GetText();
+            if (IsValidFilename(filename))
+            {SaveWorld(filename, viewport, grid);}
+        }
+
+        //load data
+        if (sv_loadButton.IsPressedFirstFrame())
+        {
+            //get input field save file name and check validity
+            std::string filename = sv_inputField.GetText();
+            if (IsValidFilename(filename))
+            {LoadWorld(filename, viewport, grid);}
         }
 
         EndDrawing();
