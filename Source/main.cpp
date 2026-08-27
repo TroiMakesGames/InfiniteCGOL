@@ -208,10 +208,6 @@ bool SaveWorld(const std::string& filename, const Viewport& viewport, const Grid
 //load world data from the entered save file
 bool LoadWorld(const std::string& filename, Viewport& viewport, Grid& grid)
 {
-        std::cout << "Loading from: "
-          << std::filesystem::absolute(filename)
-          << "\n";
-
     //open file
     std::ifstream file(filename);
     if (!file.is_open())
@@ -307,7 +303,6 @@ int main()
     InputField sv_inputField = InputField(200, 40, 2, "SaveFile.txt", 15, Color{0, 0, 0, 100}, Color(255, 255, 255, 255), Color{0, 0, 0, 200}, Color{255, 255, 255, 255}, Color{255, 255, 255, 255}, Color{200, 200, 200, 255}, Color{255, 255, 255, 255});
     Button sv_saveButton = Button(97, 40, 2, "Save to", 15, Color{0, 0, 0, 100}, Color(0, 255, 0, 255), Color{0, 0, 0, 50}, Color{0, 150, 0, 255}, Color{0, 255, 0, 255}, Color{0, 150, 0, 255});
     Button sv_loadButton = Button(97, 40, 2, "Load from", 15, Color{0, 0, 0, 100}, Color(255, 0, 0, 255), Color{0, 0, 0, 50}, Color{150, 0, 0, 255}, Color{255, 0, 0, 255}, Color{150, 0, 0, 255});
-    Button sv_copyButton = Button(200, 40, 2, "Copy from", 15, Color{0, 0, 0, 100}, Color(0, 100, 255, 255), Color{0, 0, 0, 50}, Color{0, 50, 150, 255}, Color{0, 100, 255, 255}, Color{0, 50, 150, 255});
 
     //controls text
     bool displayInterface = true;
@@ -519,7 +514,6 @@ int main()
             sv_inputField.Draw(WIDTH - 200 - 5, 5);
             sv_saveButton.Draw(WIDTH - 200 - 5, 5 + 40 + 5);
             sv_loadButton.Draw(WIDTH - 200 - 5 + 103, 5 + 40 + 5);
-            sv_copyButton.Draw(WIDTH - 200 - 5, 5 + 40 + 5 + 40 + 5);
         }
 
         //get save system inputs
